@@ -72,33 +72,14 @@ with col1:
     )
 
 with col2:
-    col2_1, col2_2 = st.columns(2)
-    
-    with col2_1:
-        if st.button("🔄 Dados Exemplo", help="Carregar dados fictícios para demonstração"):
-            with st.spinner("Carregando dados de exemplo..."):
-                sample_data = load_sample_data()
-                if sample_data:
-                    SessionManager.save_data(sample_data, {
-                        "file_name": "dados_exemplo.xlsx",
-                        "file_size": 0,
-                        "upload_time": pd.Timestamp.now(),
-                        "total_records": sum(len(df) for df in sample_data.values()),
-                        "sheets_loaded": list(sample_data.keys()),
-                        "source": "exemplo"
-                    })
-                    st.success("✅ Dados de exemplo carregados!")
-                    st.rerun()
-    
-    with col2_2:
-        if check_default_base_exists() and st.button("📂 Base Padrão", help="Recarregar a base padrão"):
-            with st.spinner("Recarregando base padrão..."):
-                default_data = load_default_base_if_exists()
-                if default_data:
-                    loader = DataLoader()
-                    SessionManager.save_data(default_data, loader.metadata)
-                    st.success("✅ Base padrão recarregada!")
-                    st.rerun()
+    if check_default_base_exists() and st.button("🔄 Recarregar Base Padrão", help="Recarregar a base padrão"):
+        with st.spinner("Recarregando base padrão..."):
+            default_data = load_default_base_if_exists()
+            if default_data:
+                loader = DataLoader()
+                SessionManager.save_data(default_data, loader.metadata)
+                st.success("✅ Base padrão recarregada!")
+                st.rerun()
 
 # Processar upload
 if uploaded_file is not None:

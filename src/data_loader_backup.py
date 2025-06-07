@@ -18,7 +18,6 @@ logger = logging.getLogger(__name__)
 
 class DataLoader:
     """Classe para carregamento e validação de dados do Excel"""
-    
     def __init__(self):
         self.data: Dict[str, pd.DataFrame] = {}
         self.metadata: Dict = {}
@@ -66,8 +65,7 @@ class DataLoader:
                 return False, f"Abas não encontradas: {', '.join(missing_sheets)}"
             
             return True, "Arquivo válido"
-            
-        except Exception as e:
+              except Exception as e:
             logger.error(f"Erro na validação do arquivo: {str(e)}")
             return False, f"Erro na validação: {str(e)}"
     
@@ -300,8 +298,7 @@ class DataLoader:
             
             # Carregar abas principais
             data = {}
-            
-            # Aba principal - dados diários
+              # Aba principal - dados diários
             try:
                 df_diaria = pd.read_excel(
                     BASE_EXCEL_PATH, 
@@ -313,9 +310,7 @@ class DataLoader:
                 logger.info(f"Carregada aba pulso_consulta_diaria da base padrão: {df_diaria.shape}")
                 
             except Exception as e:
-                logger.error(f"Erro ao carregar aba 'pulso_consulta_diaria' da base padrão: {str(e)}")
-                return {}
-            
+                logger.error(f"Erro ao carregar aba 'pulso_consulta_diaria' da base padrão: {str(e)}")                return {}
             # Aba com cálculos de lacunas
             try:
                 df_cluster = pd.read_excel(
@@ -365,7 +360,6 @@ class DataLoader:
             logger.error(f"Erro ao carregar base padrão: {str(e)}")
             return {}
 
-
 def check_default_base_exists() -> bool:
     """
     Verifica se a base padrão existe
@@ -408,8 +402,7 @@ def load_sample_data() -> Dict[str, pd.DataFrame]:
             "qtd_item": [200 + i * 20 for i in range(20)],
             "Mediana_Semana_RL": [15000] * 20,
             "Mediana_Semana_cupom": [150] * 20
-        }),
-        "pulso_consulta_diaria_cluster_a": pd.DataFrame({
+        }),        "pulso_consulta_diaria_cluster_a": pd.DataFrame({
             "NomeLoja": [f"Loja {i:03d}" for i in range(1, 21)],
             "grupo_comparavel": ["1-0", "1-0", "2-0", "2-0", "3-0"] * 4,
             "LacunaRL": [-5000, -3000, -1000, 2000, 4000] * 4,

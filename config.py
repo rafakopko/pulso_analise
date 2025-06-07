@@ -16,7 +16,7 @@ BASE_EXCEL_PATH = BASE_DIR / "Base" / "Pulso _ Acompanhamento Gerencial .xlsx"
 
 # Configurações do Streamlit
 PAGE_CONFIG = {
-    "page_title": "Dashboard Pulso - Análise de Lacunas",
+    "page_title": "Home - Dashboard Pulso",
     "page_icon": "📊",
     "layout": "wide",
     "initial_sidebar_state": "expanded",
