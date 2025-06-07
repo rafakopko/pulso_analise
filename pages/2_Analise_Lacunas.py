@@ -44,7 +44,7 @@ if not metrics or "error" in metrics:
 st.sidebar.header("🔍 Filtros")
 
 # Filtros disponíveis
-df_cluster = data.get("pulso_consulta_diaria_cluster_antigo", pd.DataFrame())
+df_cluster = data.get("pulso_consulta_diaria_cluster_a", pd.DataFrame())
 
 # Inicializar df_filtrado
 df_filtrado = pd.DataFrame()

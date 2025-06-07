@@ -9,7 +9,7 @@ import openpyxl
 from typing import Dict, List, Optional, Tuple
 import logging
 
-from config import REQUIRED_COLUMNS, EXCEL_CONFIG, MESSAGES
+from config import REQUIRED_COLUMNS, EXCEL_CONFIG, MESSAGES, BASE_EXCEL_PATH
 
 # Configurar logging
 logging.basicConfig(level=logging.INFO)
@@ -34,7 +34,7 @@ class DataLoader:
             Tuple[bool, str]: (é_válido, mensagem)
         """
         try:
-            # Verificar tamanho do arquivo
+            #
             if file.size > EXCEL_CONFIG["max_file_size"] * 1024 * 1024:
                 return False, f"Arquivo muito grande. Máximo: {EXCEL_CONFIG['max_file_size']}MB"
             
@@ -86,12 +86,12 @@ class DataLoader:
             # Carregar abas principais
             data = {}
             
-            with st.spinner("🔄 Carregando dados..."):
-                # Aba principal - dados diários
+            with st.spinner("🔄 Carregando dados..."):                # Aba principal - dados diários
                 try:
                     df_diaria = pd.read_excel(
                         file, 
                         sheet_name="pulso_consulta_diaria",
+                        header=1,  # Skip description row
                         engine='openpyxl'
                     )
                     data["pulso_consulta_diaria"] = df_diaria
@@ -105,14 +105,15 @@ class DataLoader:
                 try:
                     df_cluster = pd.read_excel(
                         file,
-                        sheet_name="pulso_consulta_diaria_cluster_antigo", 
+                        sheet_name="pulso_consulta_diaria_cluster_a", 
+                        header=1,  # Skip description row
                         engine='openpyxl'
                     )
-                    data["pulso_consulta_diaria_cluster_antigo"] = df_cluster
+                    data["pulso_consulta_diaria_cluster_a"] = df_cluster
                     logger.info(f"Carregada aba cluster: {df_cluster.shape}")
                     
                 except Exception as e:
-                    st.error(f"❌ Erro ao carregar aba 'pulso_consulta_diaria_cluster_antigo': {str(e)}")
+                    st.error(f"❌ Erro ao carregar aba 'pulso_consulta_diaria_cluster_a': {str(e)}")
                     return {}
             
             # Validar colunas obrigatórias
@@ -228,6 +229,107 @@ class DataLoader:
             }
         
         return summary
+    
+    def load_default_base(self) -> Dict[str, pd.DataFrame]:
+        """
+        Carrega a base padrão do diretório Base/
+        
+        Returns:
+            Dict[str, pd.DataFrame]: Dados da base padrão ou dict vazio se erro
+        """
+        try:
+            if not BASE_EXCEL_PATH.exists():
+                logger.warning(f"Arquivo base não encontrado: {BASE_EXCEL_PATH}")
+                return {}
+            
+            logger.info(f"Carregando base padrão: {BASE_EXCEL_PATH}")
+            
+            # Carregar abas principais
+            data = {}
+              # Aba principal - dados diários
+            try:
+                df_diaria = pd.read_excel(
+                    BASE_EXCEL_PATH, 
+                    sheet_name="pulso_consulta_diaria",
+                    header=1,  # Skip description row
+                    engine='openpyxl'
+                )
+                data["pulso_consulta_diaria"] = df_diaria
+                logger.info(f"Carregada aba pulso_consulta_diaria da base padrão: {df_diaria.shape}")
+                
+            except Exception as e:
+                logger.error(f"Erro ao carregar aba 'pulso_consulta_diaria' da base padrão: {str(e)}")
+                return {}
+              # Aba com cálculos de lacunas
+            try:
+                df_cluster = pd.read_excel(
+                    BASE_EXCEL_PATH,
+                    sheet_name="pulso_consulta_diaria_cluster_a", 
+                    header=1,  # Skip description row
+                    engine='openpyxl'
+                )
+                data["pulso_consulta_diaria_cluster_a"] = df_cluster
+                logger.info(f"Carregada aba cluster da base padrão: {df_cluster.shape}")
+                
+            except Exception as e:
+                logger.error(f"Erro ao carregar aba 'pulso_consulta_diaria_cluster_a' da base padrão: {str(e)}")
+                return {}
+        
+            # Validar colunas obrigatórias
+            validation_success = True
+            for sheet_name, df in data.items():
+                missing_cols = self._validate_columns(df, sheet_name)
+                if missing_cols:
+                    logger.warning(f"Colunas não encontradas em '{sheet_name}': {', '.join(missing_cols)}")
+                    validation_success = False
+            
+            if not validation_success:
+                logger.warning("Algumas colunas obrigatórias não foram encontradas na base padrão.")
+            
+            # Processar dados básicos
+            data = self._preprocess_data(data)
+            
+            # Salvar metadados
+            file_stat = BASE_EXCEL_PATH.stat()
+            self.metadata = {
+                "file_name": BASE_EXCEL_PATH.name,
+                "file_size": file_stat.st_size,
+                "upload_time": pd.Timestamp.now(),
+                "total_records": sum(len(df) for df in data.values()),
+                "sheets_loaded": list(data.keys()),
+                "source": "base_padrao"
+            }
+            
+            self.data = data
+            logger.info("Base padrão carregada com sucesso!")
+            
+            return data
+            
+        except Exception as e:
+            logger.error(f"Erro ao carregar base padrão: {str(e)}")
+            return {}
+
+def check_default_base_exists() -> bool:
+    """
+    Verifica se a base padrão existe
+    
+    Returns:
+        bool: True se a base padrão existe
+    """
+    return BASE_EXCEL_PATH.exists()
+
+
+def load_default_base_if_exists() -> Optional[Dict[str, pd.DataFrame]]:
+    """
+    Carrega a base padrão se ela existir
+    
+    Returns:
+        Optional[Dict[str, pd.DataFrame]]: Dados carregados ou None
+    """
+    if check_default_base_exists():
+        loader = DataLoader()
+        return loader.load_default_base()
+    return None
 
 
 def load_sample_data() -> Dict[str, pd.DataFrame]:
@@ -249,8 +351,7 @@ def load_sample_data() -> Dict[str, pd.DataFrame]:
             "qtd_item": [200 + i * 20 for i in range(20)],
             "Mediana_Semana_RL": [15000] * 20,
             "Mediana_Semana_cupom": [150] * 20
-        }),
-        "pulso_consulta_diaria_cluster_antigo": pd.DataFrame({
+        }),        "pulso_consulta_diaria_cluster_a": pd.DataFrame({
             "NomeLoja": [f"Loja {i:03d}" for i in range(1, 21)],
             "grupo_comparavel": ["1-0", "1-0", "2-0", "2-0", "3-0"] * 4,
             "LacunaRL": [-5000, -3000, -1000, 2000, 4000] * 4,

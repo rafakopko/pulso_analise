@@ -184,7 +184,7 @@ def validate_data_consistency(data: Dict[str, pd.DataFrame]) -> Dict[str, List[s
     
     try:
         df_diaria = data.get("pulso_consulta_diaria")
-        df_cluster = data.get("pulso_consulta_diaria_cluster_antigo")
+        df_cluster = data.get("pulso_consulta_diaria_cluster_a")
         
         if df_diaria is not None and df_cluster is not None:
             # Verificar se as lojas são consistentes

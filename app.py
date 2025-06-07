@@ -14,7 +14,7 @@ import sys
 sys.path.append(str(Path(__file__).parent / "src"))
 
 from config import PAGE_CONFIG, MESSAGES, UPLOAD_DIR
-from src.data_loader import DataLoader, load_sample_data
+from src.data_loader import DataLoader, load_sample_data, check_default_base_exists, load_default_base_if_exists
 from src.calculations import LacunaCalculator
 from src.visualizations import PulsoVisualizations
 from src.utils import (
@@ -30,6 +30,17 @@ setup_logging()
 ensure_directories()
 initialize_session_state()
 
+# Carregamento automático da base padrão se não houver dados carregados
+if not SessionManager.is_data_loaded() and check_default_base_exists():
+    with st.spinner("🔄 Carregando base padrão..."):
+        default_data = load_default_base_if_exists()
+        if default_data:
+            loader = DataLoader()
+            # Usar os metadados criados na função load_default_base
+            SessionManager.save_data(default_data, loader.metadata)
+            st.success("✅ Base padrão carregada automaticamente!")
+            st.rerun()
+
 # Sidebar
 st.sidebar.title("🎯 Dashboard Pulso")
 st.sidebar.markdown("---")
@@ -42,29 +53,52 @@ st.markdown("---")
 # Seção de upload de arquivos
 st.header("📁 Carregamento de Dados")
 
+# Verificar se há dados carregados para mostrar informações
+if SessionManager.is_data_loaded():
+    metadata = SessionManager.get_metadata()
+    source = metadata.get('source', 'upload')
+    if source == 'base_padrao':
+        st.info("📊 **Base padrão carregada.** Você pode fazer upload de uma nova base para atualizar os dados.")
+    else:
+        st.info("📊 **Dados carregados.** Você pode fazer upload de uma nova base para atualizar os dados.")
+
 col1, col2 = st.columns([3, 1])
 
 with col1:
     uploaded_file = st.file_uploader(
-        "Faça upload do arquivo Excel (Pulso _ Acompanhamento Gerencial.xlsx)",
+        "Faça upload do arquivo Excel para atualizar a base (Pulso _ Acompanhamento Gerencial.xlsx)",
         type=['xlsx', 'xls'],
         help="Selecione o arquivo Excel com os dados do Pulso"
     )
 
 with col2:
-    if st.button("🔄 Usar Dados de Exemplo", help="Carregar dados fictícios para demonstração"):
-        with st.spinner("Carregando dados de exemplo..."):
-            sample_data = load_sample_data()
-            if sample_data:
-                SessionManager.save_data(sample_data, {
-                    "file_name": "dados_exemplo.xlsx",
-                    "file_size": 0,
-                    "upload_time": pd.Timestamp.now(),
-                    "total_records": sum(len(df) for df in sample_data.values()),
-                    "sheets_loaded": list(sample_data.keys())
-                })
-                st.success("✅ Dados de exemplo carregados!")
-                st.rerun()
+    col2_1, col2_2 = st.columns(2)
+    
+    with col2_1:
+        if st.button("🔄 Dados Exemplo", help="Carregar dados fictícios para demonstração"):
+            with st.spinner("Carregando dados de exemplo..."):
+                sample_data = load_sample_data()
+                if sample_data:
+                    SessionManager.save_data(sample_data, {
+                        "file_name": "dados_exemplo.xlsx",
+                        "file_size": 0,
+                        "upload_time": pd.Timestamp.now(),
+                        "total_records": sum(len(df) for df in sample_data.values()),
+                        "sheets_loaded": list(sample_data.keys()),
+                        "source": "exemplo"
+                    })
+                    st.success("✅ Dados de exemplo carregados!")
+                    st.rerun()
+    
+    with col2_2:
+        if check_default_base_exists() and st.button("📂 Base Padrão", help="Recarregar a base padrão"):
+            with st.spinner("Recarregando base padrão..."):
+                default_data = load_default_base_if_exists()
+                if default_data:
+                    loader = DataLoader()
+                    SessionManager.save_data(default_data, loader.metadata)
+                    st.success("✅ Base padrão recarregada!")
+                    st.rerun()
 
 # Processar upload
 if uploaded_file is not None:

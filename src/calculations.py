@@ -4,7 +4,7 @@ Módulo para cálculos de lacunas e métricas do Projeto Pulso
 
 import pandas as pd
 import numpy as np
-from typing import Dict, List, Tuple, Optional
+from typing import Dict, List, Tuple, Optional, Any
 import logging
 
 logger = logging.getLogger(__name__)
@@ -16,9 +16,9 @@ class LacunaCalculator:
     def __init__(self, data: Dict[str, pd.DataFrame]):
         self.data = data
         self.df_diaria = data.get("pulso_consulta_diaria", pd.DataFrame())
-        self.df_cluster = data.get("pulso_consulta_diaria_cluster_antigo", pd.DataFrame())
+        self.df_cluster = data.get("pulso_consulta_diaria_cluster_a", pd.DataFrame())
     
-    def calculate_all_metrics(self) -> Dict[str, any]:
+    def calculate_all_metrics(self) -> Dict[str, Any]:
         """
         Calcula todas as métricas principais do dashboard
         
@@ -143,8 +143,7 @@ class LacunaCalculator:
                 "mean_LacunaRL": "LacunaRL_Media",
                 "std_LacunaRL": "LacunaRL_Desvio"
             })
-            
-            # Calcular métricas adicionais
+              # Calcular métricas adicionais
             cluster_analysis["LacunaRL_Potencial"] = cluster_analysis["LacunaRL_Total"] * -1  # Inverter negativos
             cluster_analysis["LacunaRL_Potencial"] = cluster_analysis["LacunaRL_Potencial"].where(
                 cluster_analysis["LacunaRL_Potencial"] > 0, 0
@@ -163,18 +162,17 @@ class LacunaCalculator:
         Returns:
             pd.DataFrame: Análise por GR
         """
-        if self.df_diaria.empty or self.df_cluster.empty:
+        if self.df_cluster.empty:
             return pd.DataFrame()
         
         try:
-            # Merge dos dados para ter GR
-            merged_data = self.df_cluster.merge(
-                self.df_diaria[["NomeLoja", "NumeroGR"]].drop_duplicates(),
-                on="NomeLoja",
-                how="left"
-            )
+            # Verificar se NumeroGR existe no df_cluster
+            if "NumeroGR" not in self.df_cluster.columns:
+                logger.warning("Coluna NumeroGR não encontrada nos dados")
+                return pd.DataFrame()
             
-            gr_analysis = merged_data.groupby("NumeroGR").agg({
+            # Usar NumeroGR diretamente do df_cluster
+            gr_analysis = self.df_cluster.groupby("NumeroGR").agg({
                 "LacunaRL": ["sum", "mean", "count"],
                 "LacunaCupom": ["sum", "mean"],
                 "LacunaBM": ["sum", "mean"],

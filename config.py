@@ -12,6 +12,7 @@ UPLOAD_DIR = DATA_DIR / "upload"
 PROCESSED_DIR = DATA_DIR / "processed"
 EXPORTS_DIR = DATA_DIR / "exports"
 DOCS_DIR = BASE_DIR / "Documentação"
+BASE_EXCEL_PATH = BASE_DIR / "Base" / "Pulso _ Acompanhamento Gerencial .xlsx"
 
 # Configurações do Streamlit
 PAGE_CONFIG = {
@@ -32,7 +33,7 @@ EXCEL_CONFIG = {
     "max_file_size": 50,  # MB
     "required_sheets": [
         "pulso_consulta_diaria",
-        "pulso_consulta_diaria_cluster_antigo"
+        "pulso_consulta_diaria_cluster_a"
     ]
 }
 
@@ -43,7 +44,7 @@ REQUIRED_COLUMNS = {
         "receita_liquida", "qtd_cupom", "qtd_item",
         "Mediana_Semana_RL", "Mediana_Semana_cupom"
     ],
-    "pulso_consulta_diaria_cluster_antigo": [
+    "pulso_consulta_diaria_cluster_a": [
         "NomeLoja", "grupo_comparavel", "LacunaRL", "LacunaCupom",
         "LacunaBM", "LacunaPM", "LacunaProd"
     ]

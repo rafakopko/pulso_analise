@@ -38,14 +38,13 @@ def main():
     # Obter dados de outras análises se disponíveis
     gaps_df = st.session_state.get('gaps_data', None)
     clusters_df = st.session_state.get('df_clustered', None)
-    
-    # Obter DataFrame principal para visualização
+      # Obter DataFrame principal para visualização
     if isinstance(df, dict):
         # Pegar o primeiro DataFrame disponível ou o mais relevante
         if "pulso_consulta_diaria" in df:
             main_df = df["pulso_consulta_diaria"]
-        elif "pulso_consulta_diaria_cluster_antigo" in df:
-            main_df = df["pulso_consulta_diaria_cluster_antigo"]
+        elif "pulso_consulta_diaria_cluster_a" in df:
+            main_df = df["pulso_consulta_diaria_cluster_a"]
         else:
             main_df = list(df.values())[0]  # Primeiro DataFrame disponível
     else:

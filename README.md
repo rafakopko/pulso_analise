@@ -74,7 +74,7 @@ O **Dashboard Pulso** é um sistema de análise de lacunas comerciais que automa
 
 ### 3. Arquivo Excel Esperado
 O sistema espera um arquivo com as abas:
-- `pulso_consulta_diaria_cluster_antigo`
+- `pulso_consulta_diaria_cluster_a`
 - `pulso_consulta_diaria`
 
 ## 🎯 Funcionalidades Principais

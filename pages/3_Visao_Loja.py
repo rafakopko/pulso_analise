@@ -35,7 +35,7 @@ if not SessionManager.is_data_loaded():
 data = SessionManager.get_data()
 calculator = LacunaCalculator(data)
 viz = PulsoVisualizations()  # Inicializar viz aqui
-df_cluster = data.get("pulso_consulta_diaria_cluster_antigo", pd.DataFrame())
+df_cluster = data.get("pulso_consulta_diaria_cluster_a", pd.DataFrame())
 
 if df_cluster.empty:
     st.error("❌ Dados de cluster não encontrados")
